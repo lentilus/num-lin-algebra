@@ -80,3 +80,30 @@ def test_official1():
     tridiag_vwrw(matin, b)
     # finishes with matin = [1.0,2.0,3.0,4.0]
     np.testing.assert_almost_equal(b, solution)
+
+
+@pytest.mark.skip
+def _test(n):
+    matin = np.array([[-1.0] * n, [2.0] * n, [-1.0] * n])
+    b = np.zeros(n)
+    b[0] = 0.01
+    b[n - 1] = 0.01
+
+    solution = np.array([0.01] * n)
+
+    tridiag_vwrw(matin, b)
+    error = np.linalg.norm(b - solution, np.inf) / np.linalg.norm(b, np.inf)
+    print(f"Relativer Fehler: {error}", end=" ")
+    np.testing.assert_almost_equal(b, solution)
+
+
+def test_official2_10():
+    _test(10)
+
+
+def test_official2_100():
+    _test(100)
+
+
+def test_official2_1000():
+    _test(1000)
