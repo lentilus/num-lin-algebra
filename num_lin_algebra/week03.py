@@ -2,6 +2,9 @@ import numpy as np
 
 
 def compress(matrix: np.ndarray) -> np.ndarray:
+    """
+    (for testing only) encodes tridiagonal Matrix into 3xn shape
+    """
     n = matrix.shape[0]
     main_diag = np.zeros(n)
     sub_diag1 = np.zeros(n)
@@ -18,6 +21,9 @@ def compress(matrix: np.ndarray) -> np.ndarray:
 
 
 def decompress(compressed: np.ndarray) -> np.ndarray:
+    """
+    (for testing only) decodes tridiagonal Matrix into 3xn shape
+    """
     n = len(compressed[0])
     matrix = np.zeros((n, n), dtype=int)
     for i in range(n):
@@ -49,7 +55,32 @@ def tridiag_lu(A: np.ndarray) -> np.ndarray:
     n = A.shape[1]
 
     for i in range(0, n - 1):
-        A[2][i] = A[2][i] / A[1][i]
+        pivot = A[1][i]
+        # We check explicitly before dividing!
+        assert not np.isclose(pivot, 0.0), "Pivot close to zero, aborted."
+        A[2][i] = A[2][i] / pivot
         A[1][i + 1] = A[1][i + 1] - (A[2][i] * A[0][i])
 
     return A
+
+
+def elim_vw(A, b):
+    n = A.shape[1]
+    for i in range(1, n):
+        b[i] = b[i] - (A[2][i - 1] * b[i - 1])
+
+
+def elim_rw(A, b):
+    n = A.shape[1]
+    b[n - 1] = b[n - 1] / A[1][n - 1]
+    for i in range(1, n):
+        j = n - i - 1
+        b[j] = (b[j] - (A[0][j] * b[j + 1])) / A[1][j]
+
+
+def tridiag_vwrw(Z, b):
+    # tridiag modifies Z in place so no need to capture return
+    tridiag_lu(Z)
+    elim_vw(Z, b)
+    elim_rw(Z, b)
+    return b
