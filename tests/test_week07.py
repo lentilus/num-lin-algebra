@@ -1,8 +1,7 @@
-import pytest
 import numpy as np
 from numpy.testing import assert_array_almost_equal
 
-from num_lin_algebra import relaxation, relaxation_iteration
+from num_lin_algebra import relaxation, relaxation_iteration, find_optimal_w
 
 # Define the test case for Ax = b
 A = np.array(
@@ -62,3 +61,25 @@ def test_relaxation():
     error = np.linalg.norm(solution - x_expected, ord=np.inf)
 
     assert error < 1e-04, f"Error in solution is too large: {error} > {eps}"
+
+
+# Test the find_optimal_w function to determine the best relaxation parameter
+def test_find_optimal_w():
+    optimal_w, min_iterations = find_optimal_w(A, b, x0, eps)
+
+    # Test if the function returns a valid relaxation parameter
+    assert (
+        optimal_w >= 0 and optimal_w <= 2
+    ), "Relaxation parameter w should be in the range [0, 2]."
+
+    # Test that the number of iterations is reasonable
+    assert min_iterations > 0, "The optimal w should yield at least one iteration."
+
+    # Test that the optimal w leads to convergence
+    solution, _ = relaxation(A, b, x0, eps, optimal_w)
+    error = np.linalg.norm(solution - x_expected, ord=np.inf)
+
+    # Ensure the error is within the tolerance
+    assert (
+        error < 1e-04
+    ), f"Error in solution with optimal w is too large: {error} > {eps}"

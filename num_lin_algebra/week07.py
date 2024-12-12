@@ -1,6 +1,11 @@
 import numpy as np
 
 
+class NoConvergenceError(Exception):
+    def __init__(self, message="Algorithm does not converge"):
+        super().__init__(message)
+
+
 def relaxation_iteration(A, b, x, w):
     """
     Perform one iteration step of the relaxation method.
@@ -55,25 +60,36 @@ def relaxation(A, b, x0, eps, w):
             difference between consecutive solutions is less than eps.
         w : float
             Relaxation parameter.
+        max_no_progress_iter : int, optional (default is 100)
+            Maximum number of iterations without improvement in error before throwing an exception.
 
     Returns:
         y : array-like, shape (n,)
             Approximate solution of the system.
         count : int
             Number of iterations performed.
+
+    Raises:
+        Exception: If no progress is made in the specified number of iterations.
     """
     x = np.copy(x0)  # Start with the initial guess
-    n = len(b)
     count = 0
+    prev_error = np.inf  # Initialize previous error as infinity
 
     while True:
-        # Perform a relaxation iteration
         y = relaxation_iteration(A, b, x, w)
 
-        # Check convergence
+        # Compute the error (change in solution)
         error = np.linalg.norm(y - x, ord=np.inf)
+
+        # Check if the error decreases
+        if error >= prev_error:
+            raise NoConvergenceError
+
+        prev_error = error  # Update the previous error if progress is made
+
+        # Check for convergence break condition
         if error < eps:
-            print(f"Error is {error} < {eps}. Done.")
             break
 
         # Update the solution and iteration count
@@ -81,3 +97,24 @@ def relaxation(A, b, x0, eps, w):
         count += 1
 
     return y, count
+
+
+def find_optimal_w(A, b, x0, eps, w_min=0.1, w_max=2.0, w_step=0.0001):
+    optimal_w = w_min
+    min_iterations = float("inf")
+
+    # Iterate over a range of w values
+    for w in np.arange(w_min, w_max + w_step, w_step):
+        print(f"Computing w={w}")
+        try:
+            _, iterations = relaxation(A, b, x0, eps, w)
+        except NoConvergenceError:
+            print(f"No convergence for w={w}")
+            continue
+        if iterations < min_iterations:
+            min_iterations = iterations
+            optimal_w = w
+            # print(f"Found new optimal w={w}")
+
+    print(f"Optimal w: {optimal_w}, with {min_iterations} iterations.")
+    return optimal_w, min_iterations
