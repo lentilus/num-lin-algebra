@@ -1,6 +1,11 @@
 import numpy as np
 
 
+# We will use this as a default
+def dummy_counter():
+    pass
+
+
 def compress(matrix: np.ndarray) -> np.ndarray:
     """
     (for testing only) encodes tridiagonal Matrix into 3xn shape
